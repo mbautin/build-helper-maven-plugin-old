@@ -102,7 +102,7 @@ public class ReserveListenerPortMojo
      *
      * @since 1.9
      */
-    @Parameter( defaultValue = "false")
+    @Parameter( defaultValue = "false" )
     private boolean randomPortSelection;
 
     /**
@@ -183,17 +183,17 @@ public class ReserveListenerPortMojo
     private ServerSocket getServerSocket()
         throws IOException, MojoExecutionException
     {
-        if ( minPortNumber == null && maxPortNumber != null )
+        if ( minPortNumber == null && maxPortNumber != null || randomPortSelection )
         {
             getLog().debug( "minPortNumber unspecified: using default value " + FIRST_NON_ROOT_PORT_NUMBER );
             minPortNumber = FIRST_NON_ROOT_PORT_NUMBER;
         }
-        if ( minPortNumber != null && maxPortNumber == null )
+        if ( minPortNumber != null && maxPortNumber == null || randomPortSelection )
         {
             getLog().debug( "maxPortNumber unspecified: using default value " + MAX_PORT_NUMBER );
             maxPortNumber = MAX_PORT_NUMBER;
         }
-        if ( minPortNumber == null && maxPortNumber == null )
+        if ( minPortNumber == null && maxPortNumber == null && !randomPortSelection )
         {
             return new ServerSocket( 0 );
         }
