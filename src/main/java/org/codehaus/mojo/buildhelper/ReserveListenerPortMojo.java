@@ -32,6 +32,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -95,6 +96,14 @@ public class ReserveListenerPortMojo
      */
     @Parameter
     private Integer maxPortNumber;
+
+    /**
+     * Specify to select port numbers randomly instead of sequentially.
+     *
+     * @since 1.9
+     */
+    @Parameter( defaultValue = "false" )
+    private boolean randomPortSelection;
 
     /**
      * @since 1.2
@@ -174,17 +183,17 @@ public class ReserveListenerPortMojo
     private ServerSocket getServerSocket()
         throws IOException, MojoExecutionException
     {
-        if ( minPortNumber == null && maxPortNumber != null )
+        if ( minPortNumber == null && maxPortNumber != null || randomPortSelection )
         {
             getLog().debug( "minPortNumber unspecified: using default value " + FIRST_NON_ROOT_PORT_NUMBER );
             minPortNumber = FIRST_NON_ROOT_PORT_NUMBER;
         }
-        if ( minPortNumber != null && maxPortNumber == null )
+        if ( minPortNumber != null && maxPortNumber == null || randomPortSelection )
         {
             getLog().debug( "maxPortNumber unspecified: using default value " + MAX_PORT_NUMBER );
             maxPortNumber = MAX_PORT_NUMBER;
         }
-        if ( minPortNumber == null && maxPortNumber == null )
+        if ( minPortNumber == null && maxPortNumber == null && !randomPortSelection )
         {
             return new ServerSocket( 0 );
         }
@@ -194,6 +203,19 @@ public class ReserveListenerPortMojo
             // threading issues (essentially possible while put/getting the plugin ctx to get the reserved ports).
             synchronized ( lock )
             {
+                if (randomPortSelection) {
+                    Random rand = new Random();
+                    for ( int attempt = 0; attempt < 100; ++attempt ) {
+                        int port = minPortNumber + rand.nextInt( maxPortNumber - minPortNumber + 1 );
+                        if ( getReservedPorts().contains( port ) ) {
+                            continue;
+                        }
+                        ServerSocket serverSocket = tryPortNumber( port );
+                        if ( serverSocket != null ) {
+                            return serverSocket;
+                        }
+                    }
+                }
                 int min = getNextPortNumber();
                 for ( int port = min;; ++port )
                 {
@@ -202,17 +224,24 @@ public class ReserveListenerPortMojo
                         throw new MojoExecutionException( "Unable to find an available port between " + minPortNumber
                             + " and " + maxPortNumber );
                     }
-                    try
-                    {
-                        ServerSocket serverSocket = new ServerSocket( port );
+                    ServerSocket serverSocket = tryPortNumber( port );
+                    if ( serverSocket != null ) {
                         return serverSocket;
-                    }
-                    catch ( IOException ioe )
-                    {
-                        getLog().debug( "Tried binding to port " + port + " without success. Trying next port.", ioe );
                     }
                 }
             }
+        }
+    }
+
+    private ServerSocket tryPortNumber( int port ) {
+        try
+        {
+            return new ServerSocket( port );
+        }
+        catch ( IOException ioe )
+        {
+            getLog().debug( "Tried binding to port " + port + " without success. Trying next port.", ioe );
+            return null;
         }
     }
 
