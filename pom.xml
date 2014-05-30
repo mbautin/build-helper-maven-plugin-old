@@ -47,10 +47,10 @@
   </prerequisites>
 
   <scm>
-    <connection>scm:svn:http://svn.codehaus.org/mojo/trunk/mojo/build-helper-maven-plugin</connection>
-    <developerConnection>scm:svn:https://svn.codehaus.org/mojo/trunk/mojo/build-helper-maven-plugin</developerConnection>
-    <url>http://svn.codehaus.org/mojo/trunk/mojo/build-helper-maven-plugin</url>
+    <connection>scm:git:git@github.com:mbautin/build-helper-maven-plugin.git</connection>
+    <url>scm:git:git@github.com:mbautin/build-helper-maven-plugin.git</url>
   </scm>
+
   <issueManagement>
     <system>JIRA</system>
     <url>http://jira.codehaus.org/browse/MBUILDHELPER</url>
