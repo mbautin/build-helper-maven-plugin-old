@@ -203,7 +203,7 @@ public class ReserveListenerPortMojo
             // threading issues (essentially possible while put/getting the plugin ctx to get the reserved ports).
             synchronized ( lock )
             {
-                if (randomPortSelection) {
+                if (randomPortSelection != null && randomPortSelection) {
                     Random rand = new Random();
                     for ( int attempt = 0; attempt < 100; ++attempt ) {
                         int port = minPortNumber + rand.nextInt( maxPortNumber - minPortNumber + 1 );
