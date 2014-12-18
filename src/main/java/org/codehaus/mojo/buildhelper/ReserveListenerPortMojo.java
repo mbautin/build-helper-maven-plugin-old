@@ -28,7 +28,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.ServerSocket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -180,6 +180,20 @@ public class ReserveListenerPortMojo
         }
     }
 
+    private ServerSocket createServerSocket(int port) throws IOException {
+        ServerSocket socket = new ServerSocket();
+        try {
+            // We have to set SO_REUSEADDR before binding the socket.
+            socket.setReuseAddress(true);
+            // Passing null binds to all network interfaces.
+            socket.bind(new InetSocketAddress((InetAddress) null, port), 50);
+        } catch (SocketException ex) {
+            socket.close();
+            throw ex;
+        }
+        return socket;
+    }
+
     private ServerSocket getServerSocket()
         throws IOException, MojoExecutionException
     {
@@ -195,7 +209,7 @@ public class ReserveListenerPortMojo
         }
         if ( minPortNumber == null && maxPortNumber == null && !randomPortSelection )
         {
-            return new ServerSocket( 0 );
+            return createServerSocket( 0 );
         }
         else
         {
@@ -236,7 +250,7 @@ public class ReserveListenerPortMojo
     private ServerSocket tryPortNumber( int port ) {
         try
         {
-            return new ServerSocket( port );
+            return createServerSocket( port );
         }
         catch ( IOException ioe )
         {
